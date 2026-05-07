@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>KOMPAK! — Game Kekompakan Tim</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #FF4136;
+    --secondary: #0074D9;
+    --accent: #FFDC00;
+    --dark: #0a0a0f;
+    --dark2: #13131a;
+    --dark3: #1c1c28;
+    --surface: #22222f;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: rgba(240,240,240,0.45);
+    --zone-benar: #2ECC40;
+    --zone-salah: #FF4136;
+    --success: #2ECC40;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    animation: fadeIn 0.35s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========== SETUP ========== */
+  #screen-setup {
+    flex-direction: column;
+    overflow-y: auto;
+    background: var(--dark);
+  }
+
+  .setup-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem 2rem;
+    min-height: 100%;
+  }
+
+  .logo-area { text-align: center; margin-bottom: 1.25rem; }
+
+  .logo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 10vw, 90px);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 50%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .setup-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.75rem;
+    width: 100%;
+    max-width: 540px;
+  }
+
+  .setup-card h2 { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; }
+
+  .form-row { display: flex; gap: 10px; margin-bottom: 1rem; }
+
+  .form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus, .form-group select:focus { border-color: rgba(255,65,54,0.5); }
+  .form-group select option { background: var(--dark3); }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .soal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .soal-item {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .soal-item .num {
+    background: var(--surface);
+    color: var(--muted);
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .soal-item .text { flex: 1; font-size: 12px; line-height: 1.4; }
+
+  .soal-item .badge {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 5px;
+    flex-shrink: 0; text-transform: uppercase;
+  }
+  .soal-item .badge.benar { background: rgba(46,204,64,0.2); color: #5dde6e; }
+  .soal-item .badge.salah { background: rgba(255,65,54,0.2); color: #ff6b63; }
+
+  .soal-item .del-btn {
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    font-size: 14px; padding: 2px 5px;
+    border-radius: 4px; transition: color 0.2s;
+  }
+  .soal-item .del-btn:hover { color: var(--primary); }
+
+  .add-soal-row { display: flex; gap: 6px; margin-bottom: 4px; }
+
+  .add-soal-row input {
+    flex: 1;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+  }
+  .add-soal-row input:focus { border-color: rgba(255,65,54,0.5); }
+
+  .add-soal-row select {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .btn-add {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 14px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-add:hover { background: rgba(255,255,255,0.08); }
+
+  .hint-text { font-size: 11px; color: var(--muted); margin-bottom: 1rem; }
+
+  .audio-info {
+    background: rgba(255,220,0,0.07);
+    border: 1px solid rgba(255,220,0,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: rgba(255,220,0,0.85);
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
+  .audio-info strong { display: block; margin-bottom: 3px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .audio-info code { background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px; font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+  }
+  .btn-primary:hover { background: #e03429; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ========== KALIBRASI ========== */
+  #screen-calibrate {
+    flex-direction: column;
+    align-items: center;
+    background: var(--dark);
+    overflow-y: auto;
+  }
+
+  .calib-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .calib-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 34px;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-align: center;
+    margin-top: 0.25rem;
+  }
+
+  .calib-desc {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+
+  .camera-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  #video-calib, #video-game {
+    width: 100%;
+    display: block;
+    transform: scaleX(-1);
+    background: #000;
+  }
+
+  .zone-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    pointer-events: none;
+  }
+
+  .zone-benar-overlay {
+    flex: 1;
+    border-right: 3px dashed rgba(46,204,64,0.5);
+    background: rgba(46,204,64,0.07);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 10px;
+  }
+
+  .zone-salah-overlay {
+    flex: 1;
+    background: rgba(255,65,54,0.07);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 10px;
+  }
+
+  .zone-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+  }
+
+  .zone-benar-overlay .zone-label { color: var(--zone-benar); }
+  .zone-salah-overlay .zone-label { color: var(--zone-salah); }
+
+  .sensitivity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .sensitivity-row label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .sensitivity-row input[type="range"] { flex: 1; accent-color: var(--primary); }
+  .sensitivity-row span { font-size: 12px; font-weight: 600; min-width: 24px; text-align: right; }
+
+  .calib-motion-bar {
+    width: 100%; max-width: 600px;
+    height: 6px; background: var(--surface);
+    border-radius: 3px; overflow: hidden;
+  }
+  .calib-motion-fill {
+    height: 100%; background: var(--primary);
+    border-radius: 3px; transition: width 0.1s; width: 0%;
+  }
+
+  .calib-status {
+    font-size: 13px; font-weight: 600;
+    padding: 8px 18px; border-radius: 9px; text-align: center;
+  }
+  .calib-status.ok   { background: rgba(46,204,64,0.12);  color: var(--success); }
+  .calib-status.warn { background: rgba(255,220,0,0.12);  color: var(--accent);  }
+  .calib-status.err  { background: rgba(255,65,54,0.12);  color: var(--primary); }
+
+  .calib-btn-row {
+    display: flex; gap: 10px;
+    width: 100%; max-width: 600px;
+  }
+
+  /* ========== GAME SCREEN ========== */
+  #screen-game {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .game-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 1rem;
+    background: var(--dark2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 0.5rem;
+    height: 52px;
+  }
+
+  .game-info-pill {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 3px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 68px;
+  }
+  .pill-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .pill-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; line-height: 1.1; }
+  .pill-value.score { color: var(--accent); }
+
+  .game-timer-ring { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
+  .game-timer-ring svg { transform: rotate(-90deg); width: 40px; height: 40px; }
+  .timer-bg { stroke: var(--surface); }
+  .timer-fill {
+    stroke: var(--secondary);
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  }
+  .timer-text {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; line-height: 1;
+  }
+
+  .soal-panel {
+    background: var(--dark2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .soal-phase { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .soal-text  { font-size: clamp(14px, 2.8vw, 20px); font-weight: 700; line-height: 1.3; }
+
+  .answer-zones {
+    display: flex;
+    padding: 0.4rem 0.5rem;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .answer-zone {
+    flex: 1; border-radius: 9px;
+    padding: 5px 8px; text-align: center;
+    border: 2px solid transparent;
+  }
+  .answer-zone.benar { background: rgba(46,204,64,0.1);  border-color: rgba(46,204,64,0.3);  }
+  .answer-zone.salah { background: rgba(255,65,54,0.1);  border-color: rgba(255,65,54,0.3);  }
+  .answer-zone .zone-key { font-family: 'Bebas Neue', sans-serif; font-size: 24px; line-height: 1; }
+  .answer-zone.benar .zone-key { color: var(--zone-benar); }
+  .answer-zone.salah .zone-key { color: var(--zone-salah); }
+  .answer-zone .zone-desc { font-size: 10px; color: var(--muted); }
+
+  /* Camera fills remaining height */
+  .camera-game-wrapper {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  #video-game { width: 100%; height: 100%; object-fit: cover; }
+
+  #canvas-motion {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0; pointer-events: none;
+  }
+
+  .game-zone-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; pointer-events: none;
+  }
+
+  .game-zone-benar {
+    flex: 1;
+    border-right: none;
+    background: rgba(46,204,64,0.05);
+    position: relative;
+    width: calc(50% - 7.5%);
+  }
+  .game-zone-salah {
+    flex: 1;
+    background: rgba(255,65,54,0.05);
+    position: relative;
+    width: calc(50% - 7.5%);
+  }
+
+  /* Dead zone tengah */
+  .game-zone-dead {
+    width: 15%;
+    flex-shrink: 0;
+    background: rgba(255,220,0,0.06);
+    border-left:  2px dashed rgba(255,220,0,0.35);
+    border-right: 2px dashed rgba(255,220,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .dead-zone-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 11px; letter-spacing: 0.12em;
+    color: rgba(255,220,0,0.45);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+  }
+
+  .zone-motion-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 5px; width: 0%; transition: width 0.15s;
+  }
+  .game-zone-benar .zone-motion-bar { background: rgba(46,204,64,0.9); }
+  .game-zone-salah .zone-motion-bar { background: rgba(255,65,54,0.9); }
+
+  .cam-zone-tag {
+    position: absolute; bottom: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px; letter-spacing: 0.08em; opacity: 0.55;
+    left: 50%; transform: translateX(-50%);
+  }
+  .game-zone-benar .cam-zone-tag { color: var(--zone-benar); }
+  .game-zone-salah .cam-zone-tag { color: var(--zone-salah); }
+
+  /* Read overlay */
+  .read-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,15,0.87);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 15; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .read-overlay.show { opacity: 1; pointer-events: all; }
+
+  .read-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 96px; line-height: 1;
+    color: var(--accent);
+    animation: countDown 0.35s ease;
+  }
+  @keyframes countDown {
+    from { transform: scale(1.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .read-label { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+  /* ========== RESULT POPUP (fixed fullscreen) ========== */
+  .result-popup {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .result-popup.show { opacity: 1; pointer-events: all; }
+
+  .result-popup-bg {
+    position: absolute; inset: 0;
+    background: rgba(5,5,10,0.88);
+    backdrop-filter: blur(6px);
+  }
+
+  .result-popup-card {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 380px;
+    border-radius: 24px;
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    transform: scale(0.85);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .result-popup.show .result-popup-card { transform: scale(1); }
+
+  .result-popup-card.kompak-benar  { background: linear-gradient(160deg,#0a1a0c,#0f1f12); border-color: rgba(46,204,64,0.25); }
+  .result-popup-card.kompak-salah  { background: linear-gradient(160deg,#1a0a0a,#1f0f0f); border-color: rgba(255,65,54,0.25); }
+  .result-popup-card.tidak-kompak  { background: linear-gradient(160deg,#14120a,#1a170a); border-color: rgba(255,220,0,0.2);  }
+
+  .popup-icon {
+    font-size: 56px; line-height: 1;
+    margin-bottom: 0.6rem; display: block;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0) rotate(-10deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+  }
+
+  .popup-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px; letter-spacing: 0.08em; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .popup-headline.green  { color: var(--zone-benar); }
+  .popup-headline.red    { color: var(--primary);    }
+  .popup-headline.yellow { color: var(--accent);     }
+
+  .popup-sub { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+
+  .popup-bars { display: flex; gap: 12px; justify-content: center; margin-bottom: 1rem; }
+
+  .popup-bar-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+  .popup-bar-track {
+    width: 56px; height: 72px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden;
+    display: flex; align-items: flex-end;
+  }
+
+  .popup-bar-fill {
+    width: 100%; border-radius: 8px;
+    transition: height 0.7s cubic-bezier(0.34,1.2,0.64,1);
+    height: 0%;
+  }
+  .popup-bar-item.benar .popup-bar-fill { background: var(--zone-benar); }
+  .popup-bar-item.salah .popup-bar-fill { background: var(--zone-salah); }
+
+  .popup-bar-label { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.05em; }
+  .popup-bar-item.benar .popup-bar-label { color: var(--zone-benar); }
+  .popup-bar-item.salah .popup-bar-label { color: var(--zone-salah); }
+  .popup-bar-pct { font-size: 10px; color: var(--muted); }
+
+  .popup-score-badge {
+    display: inline-block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px; letter-spacing: 0.05em;
+    padding: 5px 18px; border-radius: 9px;
+    margin-bottom: 0.5rem;
+  }
+  .popup-score-badge.plus { background: rgba(46,204,64,0.15); color: var(--zone-benar); }
+  .popup-score-badge.zero { background: rgba(255,65,54,0.1);  color: rgba(255,255,255,0.3); }
+
+  .popup-total { font-size: 12px; color: var(--muted); margin-bottom: 1rem; }
+  .popup-total span { font-weight: 700; color: var(--accent); font-size: 14px; }
+
+  .btn-popup-next {
+    width: 100%; border: none; border-radius: 12px;
+    padding: 13px; font-size: 14px; font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+  }
+  .btn-popup-next.green  { background: var(--zone-benar); color: #0a1a0c; }
+  .btn-popup-next.green:hover  { background: #28b835; }
+  .btn-popup-next.red    { background: var(--primary);    color: white;   }
+  .btn-popup-next.red:hover    { background: #e03429; }
+  .btn-popup-next.yellow { background: var(--accent);     color: #1a1500; }
+  .btn-popup-next.yellow:hover { background: #e6c800; }
+
+  /* ========== RESULT SCREEN ========== */
+  #screen-result {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: var(--dark);
+    overflow-y: auto;
+  }
+
+  .confetti-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+
+  .final-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 1.75rem;
+    width: 100%; max-width: 400px;
+    text-align: center;
+    position: relative; z-index: 1;
+  }
+
+  .final-emoji { font-size: 56px; margin-bottom: 0.5rem; }
+
+  .final-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 46px; letter-spacing: 0.05em; margin-bottom: 4px;
+  }
+
+  .final-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.6; }
+
+  .final-score-box {
+    background: var(--dark3);
+    border-radius: 14px; padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .final-score-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+  .final-score-num   { font-family: 'Bebas Neue', sans-serif; font-size: 68px; line-height: 1; color: var(--accent); }
+  .final-score-max   { font-size: 12px; color: var(--muted); }
+
+  .round-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 1rem; }
+
+  .round-badge {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--dark3); border-radius: 7px;
+    padding: 5px 9px; font-size: 12px;
+  }
+  .round-badge .rb-num  { font-size: 10px; color: var(--muted); }
+  .round-badge .rb-icon { font-size: 13px; }
+
+  .btn-restart {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer; transition: background 0.2s; margin-top: 8px;
+  }
+  .btn-restart:hover { background: rgba(255,255,255,0.06); }
+
+  /* Snackbar */
+  .snackbar {
+    position: fixed; bottom: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 9px; padding: 10px 18px;
+    font-size: 13px; opacity: 0; transition: all 0.3s;
+    z-index: 300; pointer-events: none; white-space: nowrap;
+  }
+  .snackbar.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="snackbar" id="snackbar"></div>
+
+<!-- ========== SCREEN 1: SETUP ========== -->
+<div class="screen active" id="screen-setup">
+  <div class="setup-inner">
+    <div class="logo-area">
+      <div class="logo-title">KOMPAK!</div>
+      <div class="logo-sub">Game Kekompakan Tim · Berbasis Kamera</div>
+    </div>
+
+    <div class="setup-card">
+      <h2>⚙️ Pengaturan Game</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nama Tim</label>
+          <input type="text" id="input-team-name" placeholder="Contoh: Tim Alpha" value="Tim Garuda">
+        </div>
+        <div class="form-group" style="max-width:110px;">
+          <label>Anggota</label>
+          <input type="number" id="input-members" min="2" max="50" value="10">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Waktu Jawab</label>
+          <select id="input-timer">
+            <option value="5">5 detik</option>
+            <option value="7">7 detik</option>
+            <option value="10" selected>10 detik</option>
+            <option value="15">15 detik</option>
+            <option value="20">20 detik</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <div class="section-label">Daftar Soal (Pernyataan Benar/Salah)</div>
+        <div class="soal-list" id="soal-list"></div>
+        <div class="add-soal-row">
+          <input type="text" id="input-soal-text" placeholder="Tulis pernyataan...">
+          <select id="input-soal-jawaban">
+            <option value="BENAR">✓ Benar</option>
+            <option value="SALAH">✗ Salah</option>
+          </select>
+          <button class="btn-add" onclick="addSoal()">+ Tambah</button>
+        </div>
+        <div class="hint-text">Tekan Enter untuk tambah cepat</div>
+      </div>
+
+      <div class="audio-info">
+        <strong>🔊 Panduan Audio</strong>
+        Buat folder <code>audio/</code> di tempat yang sama dengan file HTML ini, lalu isi dengan:<br>
+        <code>benar.mp3</code> &nbsp;·&nbsp; <code>salah.mp3</code> &nbsp;·&nbsp; <code>tidak_kompak.mp3</code> &nbsp;·&nbsp; <code>countdown.mp3</code>
+      </div>
+
+      <button class="btn-primary" onclick="startCalibrate()">🎥 Mulai &amp; Kalibrasi Kamera →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN 2: KALIBRASI ========== -->
+<div class="screen" id="screen-calibrate">
+  <div class="calib-inner">
+    <div class="calib-title">🎥 KALIBRASI KAMERA</div>
+    <div class="calib-desc">Arahkan kamera ke seluruh area kelas. &nbsp;Zona BENAR = Kiri &nbsp;·&nbsp; Zona SALAH = Kanan</div>
+
+    <div class="camera-wrapper">
+      <video id="video-calib" autoplay playsinline muted></video>
+      <div class="zone-overlay">
+        <div class="zone-benar-overlay"><span class="zone-label">BENAR</span></div>
+        <div style="width:15%;flex-shrink:0;border-left:2px dashed rgba(255,220,0,0.4);border-right:2px dashed rgba(255,220,0,0.4);background:rgba(255,220,0,0.05);display:flex;align-items:center;justify-content:center;">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:0.1em;color:rgba(255,220,0,0.5);writing-mode:vertical-rl;transform:rotate(180deg);">NETRAL</span>
+        </div>
+        <div class="zone-salah-overlay"><span class="zone-label">SALAH</span></div>
+      </div>
+    </div>
+
+    <div class="sensitivity-row">
+      <label>Sensitivitas</label>
+      <input type="range" id="sensitivity" min="5" max="60" value="25">
+      <span id="sensitivity-val">25</span>
+    </div>
+
+    <div class="calib-motion-bar">
+      <div class="calib-motion-fill" id="calib-motion-fill"></div>
+    </div>
+
+    <div class="calib-status warn" id="calib-status">⏳ Menginisialisasi kamera...</div>
+
+    <div class="calib-btn-row">
+      <button class="btn-add" style="flex:1;padding:12px;" onclick="goBack()">← Kembali</button>
+      <button class="btn-primary" style="flex:2;margin-top:0;" id="btn-start-game" onclick="startGame()" disabled>🚀 Mulai Game!</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN 3: GAME ========== -->
+<div class="screen" id="screen-game">
+
+  <div class="game-top-bar">
+    <div class="game-info-pill">
+      <span class="pill-label">Tim</span>
+      <span class="pill-value" id="hud-team" style="font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;line-height:1.2;">—</span>
+    </div>
+
+    <div class="game-timer-ring">
+      <svg viewBox="0 0 40 40">
+        <circle class="timer-bg"   cx="20" cy="20" r="16" fill="none" stroke-width="4"/>
+        <circle class="timer-fill" id="timer-circle" cx="20" cy="20" r="16" fill="none" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <div class="timer-text" id="timer-text">—</div>
+    </div>
+
+    <div class="game-info-pill">
+      <span class="pill-label">Skor</span>
+      <span class="pill-value score" id="hud-score">0</span>
+    </div>
+  </div>
+
+  <div class="soal-panel">
+    <div class="soal-phase" id="soal-phase">SOAL 1 / 5</div>
+    <div class="soal-text"  id="soal-display">—</div>
+  </div>
+
+  <div class="answer-zones">
+    <div class="answer-zone benar">
+      <div class="zone-key">BENAR</div>
+      <div class="zone-desc">Bergerak ke KIRI</div>
+    </div>
+    <div class="answer-zone salah">
+      <div class="zone-key">SALAH</div>
+      <div class="zone-desc">Bergerak ke KANAN</div>
+    </div>
+  </div>
+
+  <div class="camera-game-wrapper">
+    <video id="video-game" autoplay playsinline muted></video>
+    <canvas id="canvas-motion"></canvas>
+
+    <div class="game-zone-overlay">
+      <div class="game-zone-benar">
+        <span class="cam-zone-tag">BENAR</span>
+        <div class="zone-motion-bar" id="bar-benar"></div>
+      </div>
+      <div class="game-zone-dead">
+        <span class="dead-zone-label">ZONA NETRAL</span>
+      </div>
+      <div class="game-zone-salah">
+        <span class="cam-zone-tag">SALAH</span>
+        <div class="zone-motion-bar" id="bar-salah"></div>
+      </div>
+    </div>
+
+    <div class="read-overlay" id="read-overlay">
+      <div class="read-count" id="read-count">3</div>
+      <div class="read-label">Bersiap...</div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT POPUP — fixed, di luar screen agar tidak terpotong overflow -->
+<div class="result-popup" id="result-popup">
+  <div class="result-popup-bg"></div>
+  <div class="result-popup-card" id="result-popup-card">
+
+    <span class="popup-icon" id="popup-icon">🎯</span>
+    <div class="popup-headline" id="popup-headline">—</div>
+    <div class="popup-sub"      id="popup-sub"></div>
+
+    <div class="popup-bars">
+      <div class="popup-bar-item benar">
+        <div class="popup-bar-track">
+          <div class="popup-bar-fill" id="popup-bar-benar"></div>
+        </div>
+        <div class="popup-bar-label">BENAR</div>
+        <div class="popup-bar-pct"   id="popup-pct-benar">0%</div>
+      </div>
+      <div class="popup-bar-item salah">
+        <div class="popup-bar-track">
+          <div class="popup-bar-fill" id="popup-bar-salah"></div>
+        </div>
+        <div class="popup-bar-label">SALAH</div>
+        <div class="popup-bar-pct"   id="popup-pct-salah">0%</div>
+      </div>
+    </div>
+
+    <div class="popup-score-badge" id="popup-score-badge">+10 POIN</div>
+    <div class="popup-total">Total skor: <span id="popup-total-score">0</span></div>
+
+    <button class="btn-popup-next" id="btn-popup-next" onclick="nextRound()">Soal Berikutnya →</button>
+  </div>
+</div>
+
+<!-- ========== SCREEN 4: RESULT AKHIR ========== -->
+<div class="screen" id="screen-result">
+  <canvas class="confetti-canvas" id="confetti-canvas"></canvas>
+  <div class="final-card">
+    <div class="final-emoji"    id="final-emoji">🏆</div>
+    <div class="final-title"    id="final-title">LUAR BIASA!</div>
+    <div class="final-subtitle" id="final-subtitle">Tim kalian sangat kompak!</div>
+
+    <div class="final-score-box">
+      <div class="final-score-label">Total Skor Akhir</div>
+      <div class="final-score-num" id="final-score">0</div>
+      <div class="final-score-max" id="final-max">dari 0 poin</div>
+    </div>
+
+    <div class="round-badges" id="round-badges"></div>
+
+    <button class="btn-primary" onclick="showSetup()">🔄 Main Lagi</button>
+    <button class="btn-restart" onclick="restartSameConfig()">↻ Ulangi Soal yang Sama</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// AUDIO — letakkan file di folder audio/ berdampingan dengan HTML
+// ============================================================
+const SFX = {
+  benar:       new Audio('audio/benar.mp3'),
+  salah:       new Audio('audio/salah.mp3'),
+  tidakKompak: new Audio('audio/tidak_kompak.mp3'),
+  countdown:   new Audio('audio/countdown.mp3'),
+};
+
+function playAudio(key) {
+  try {
+    const a = SFX[key];
+    if (!a) return;
+    a.currentTime = 0;
+    a.play().catch(() => {});   // gagal diam-diam jika file tidak ada
+  } catch(e) {}
+}
+
+// ============================================================
+// STATE
+// ============================================================
+
+// 40 pernyataan TIK — Hardware Komputer
+const SOAL_MASTER = [
+  { text: "CPU (Central Processing Unit) adalah otak dari komputer yang memproses instruksi", jawaban: "BENAR" },
+  { text: "RAM adalah penyimpanan permanen yang tetap menyimpan data saat komputer dimatikan", jawaban: "SALAH" },
+  { text: "Hard Disk Drive (HDD) menggunakan piringan magnetik yang berputar untuk menyimpan data", jawaban: "BENAR" },
+  { text: "SSD lebih cepat dari HDD karena tidak memiliki komponen mekanis yang bergerak", jawaban: "BENAR" },
+  { text: "Monitor termasuk perangkat input karena menerima data dari pengguna", jawaban: "SALAH" },
+  { text: "Keyboard dan mouse adalah contoh perangkat input komputer", jawaban: "BENAR" },
+  { text: "GPU (Graphics Processing Unit) bertanggung jawab memproses dan menampilkan grafis di layar", jawaban: "BENAR" },
+  { text: "Motherboard adalah papan induk tempat semua komponen utama komputer terhubung", jawaban: "BENAR" },
+  { text: "Power Supply Unit (PSU) mengubah arus AC dari listrik menjadi arus DC untuk komputer", jawaban: "BENAR" },
+  { text: "ROM (Read Only Memory) dapat ditulis ulang dengan bebas seperti RAM", jawaban: "SALAH" },
+  { text: "Printer adalah perangkat output yang menghasilkan salinan fisik dari dokumen digital", jawaban: "BENAR" },
+  { text: "Kapasitas RAM tidak mempengaruhi kecepatan kerja komputer sama sekali", jawaban: "SALAH" },
+  { text: "USB (Universal Serial Bus) adalah antarmuka untuk menghubungkan berbagai perangkat ke komputer", jawaban: "BENAR" },
+  { text: "Heatsink dan kipas CPU berfungsi mendinginkan prosesor agar tidak overheat", jawaban: "BENAR" },
+  { text: "BIOS adalah firmware pertama yang berjalan saat komputer dinyalakan", jawaban: "BENAR" },
+  { text: "Scanner adalah perangkat output yang menghasilkan gambar dari dokumen fisik", jawaban: "SALAH" },
+  { text: "Semakin besar kapasitas RAM, semakin banyak program yang bisa berjalan bersamaan", jawaban: "BENAR" },
+  { text: "Webcam termasuk perangkat output karena mengeluarkan gambar ke layar", jawaban: "SALAH" },
+  { text: "Flash drive (USB drive) menggunakan memori flash untuk menyimpan data secara portabel", jawaban: "BENAR" },
+  { text: "Kartu jaringan (NIC) memungkinkan komputer terhubung ke jaringan internet atau LAN", jawaban: "BENAR" },
+  { text: "Processor dengan lebih banyak core dapat memproses lebih banyak tugas secara bersamaan", jawaban: "BENAR" },
+  { text: "CD-ROM drive hanya bisa membaca data dari CD, tidak bisa menulis", jawaban: "BENAR" },
+  { text: "Layar sentuh (touchscreen) termasuk perangkat input sekaligus output", jawaban: "BENAR" },
+  { text: "RAM bersifat volatile, artinya data akan hilang ketika komputer dimatikan", jawaban: "BENAR" },
+  { text: "Hard disk eksternal tidak bisa digunakan sebagai media penyimpanan tambahan", jawaban: "SALAH" },
+  { text: "Slot PCIe pada motherboard biasanya digunakan untuk memasang kartu grafis", jawaban: "BENAR" },
+  { text: "Mikrofon adalah perangkat input yang mengubah suara menjadi sinyal digital", jawaban: "BENAR" },
+  { text: "Speaker adalah perangkat input yang menerima suara dari pengguna", jawaban: "SALAH" },
+  { text: "Optical drive seperti DVD drive menggunakan sinar laser untuk membaca dan menulis data", jawaban: "BENAR" },
+  { text: "Cache memory adalah memori sangat cepat yang terletak di dalam atau dekat CPU", jawaban: "BENAR" },
+  { text: "Komputer bisa berjalan normal tanpa RAM karena sistem operasi tidak membutuhkannya", jawaban: "SALAH" },
+  { text: "Semua jenis printer menggunakan tinta cair untuk mencetak dokumen", jawaban: "SALAH" },
+  { text: "HDMI adalah kabel yang dapat mengirimkan sinyal audio dan video sekaligus", jawaban: "BENAR" },
+  { text: "Laptop memiliki baterai sebagai sumber daya cadangan saat tidak terhubung ke listrik", jawaban: "BENAR" },
+  { text: "Processor AMD dan Intel adalah dua merek prosesor komputer yang paling populer", jawaban: "BENAR" },
+  { text: "Kartu suara (sound card) tidak diperlukan sama sekali untuk menghasilkan suara di komputer", jawaban: "SALAH" },
+  { text: "Thermal paste digunakan di antara CPU dan heatsink untuk meningkatkan transfer panas", jawaban: "BENAR" },
+  { text: "Joystick dan gamepad termasuk perangkat input yang umumnya digunakan untuk bermain game", jawaban: "BENAR" },
+  { text: "SSD NVMe lebih lambat dibandingkan SSD SATA biasa", jawaban: "SALAH" },
+  { text: "Barcode scanner adalah perangkat input yang membaca kode batang pada produk", jawaban: "BENAR" },
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+let soalList = shuffle(SOAL_MASTER);
+
+let config = { teamName: "Tim Garuda", members: 10, timerSeconds: 10 };
+
+let gameState = {
+  currentRound: 0, score: 0, roundResults: [],
+  timerInterval: null, timerRemaining: 10, phase: "idle",
+};
+
+let stream = null;
+let motionCanvas, motionCtx;
+let prevFrame = null;
+let motionAnimFrame = null;
+let sensitivity = 25;
+let calibCanvas, calibCtx;
+let zoneBenarMotion = 0, zoneSalahMotion = 0;
+let motionBuffer = { benar: [], salah: [] };
+
+// ============================================================
+// SETUP
+// ============================================================
+function renderSoalList() {
+  const el = document.getElementById('soal-list');
+  if (!soalList.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:6px 0;">Belum ada soal. Tambahkan di bawah.</div>';
+    return;
+  }
+  el.innerHTML = soalList.map((s,i) => `
+    <div class="soal-item">
+      <div class="num">${i+1}</div>
+      <div class="text">${s.text}</div>
+      <div class="badge ${s.jawaban.toLowerCase()}">${s.jawaban}</div>
+      <button class="del-btn" onclick="deleteSoal(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addSoal() {
+  const textEl = document.getElementById('input-soal-text');
+  const jwb    = document.getElementById('input-soal-jawaban').value;
+  const text   = textEl.value.trim();
+  if (!text) { showSnack("⚠️ Tulis pernyataan dulu!"); return; }
+  soalList.push({ text, jawaban: jwb });
+  textEl.value = '';
+  renderSoalList();
+}
+
+function deleteSoal(i) { soalList.splice(i,1); renderSoalList(); }
+
+document.getElementById('input-soal-text').addEventListener('keydown', e => { if(e.key==='Enter') addSoal(); });
+
+async function startCalibrate() {
+  config.teamName     = document.getElementById('input-team-name').value.trim() || "Tim";
+  config.members      = parseInt(document.getElementById('input-members').value) || 10;
+  config.timerSeconds = parseInt(document.getElementById('input-timer').value)   || 10;
+  if (!soalList.length) { showSnack("⚠️ Tambahkan minimal 1 soal!"); return; }
+  switchScreen('screen-calibrate');
+  await initCamera('video-calib');
+  startMotionCalib();
+}
+
+function goBack() { stopCamera(); switchScreen('screen-setup'); }
+
+// ============================================================
+// CAMERA
+// ============================================================
+async function initCamera(videoId) {
+  const statusEl = document.getElementById('calib-status');
+  const btnEl    = document.getElementById('btn-start-game');
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode:'user', width:{ideal:1280}, height:{ideal:720} },
+      audio: false
+    });
+    document.getElementById(videoId).srcObject = stream;
+    await document.getElementById(videoId).play();
+    statusEl.textContent = "✅ Kamera aktif! Atur sensitivitas, lalu mulai game.";
+    statusEl.className   = 'calib-status ok';
+    btnEl.disabled       = false;
+  } catch(e) {
+    statusEl.textContent = "❌ Kamera tidak bisa diakses. Izinkan akses kamera di browser.";
+    statusEl.className   = 'calib-status err';
+  }
+}
+
+function stopCamera() {
+  if (stream)         { stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  if (motionAnimFrame){ cancelAnimationFrame(motionAnimFrame); motionAnimFrame = null; }
+  prevFrame = null;
+}
+
+// ============================================================
+// MOTION CALIBRATION
+// ============================================================
+function startMotionCalib() {
+  calibCanvas = document.createElement('canvas');
+  calibCtx    = calibCanvas.getContext('2d');
+  const sens    = document.getElementById('sensitivity');
+  const sensVal = document.getElementById('sensitivity-val');
+  sens.addEventListener('input', () => { sensitivity = parseInt(sens.value); sensVal.textContent = sensitivity; });
+  // sensitivity slider di kalibrasi sekarang = PRESENCE_THRESH override
+  detectCalibMotion();
+}
+
+let calibBg = null;
+function detectCalibMotion() {
+  const vid = document.getElementById('video-calib');
+  if (!vid.videoWidth) { motionAnimFrame = requestAnimationFrame(detectCalibMotion); return; }
+
+  const W = 320, H = Math.round(320 * vid.videoHeight / vid.videoWidth);
+  calibCanvas.width = W; calibCanvas.height = H;
+  calibCtx.drawImage(vid, 0, 0, W, H);
+  const curr = calibCtx.getImageData(0, 0, W, H);
+
+  if (!calibBg) {
+    calibBg = new Float32Array(curr.data.length);
+    for (let i=0; i<curr.data.length; i++) calibBg[i] = curr.data[i];
+  }
+
+  let fg = 0, total = 0;
+  const thresh = parseInt(document.getElementById('sensitivity').value);
+  for (let i=0; i<curr.data.length; i+=4*STEP) {
+    const d = (Math.abs(curr.data[i]-calibBg[i])+Math.abs(curr.data[i+1]-calibBg[i+1])+Math.abs(curr.data[i+2]-calibBg[i+2]))/3;
+    if (d > thresh) fg++;
+    total++;
+  }
+  const pct = Math.min(100, (fg/total)*600);
+  document.getElementById('calib-motion-fill').style.width = pct + '%';
+
+  // Update calibBg lambat
+  for (let i=0; i<curr.data.length; i++) calibBg[i] = calibBg[i]*0.97 + curr.data[i]*0.03;
+
+  motionAnimFrame = requestAnimationFrame(detectCalibMotion);
+}
+
+// ============================================================
+// GAME START
+// ============================================================
+async function startGame() {
+  gameState = { currentRound:0, score:0, roundResults:[], timerInterval:null, timerRemaining:10, phase:'idle' };
+  switchScreen('screen-game');
+  const vid = document.getElementById('video-game');
+  vid.srcObject = stream;
+  await vid.play();
+  motionCanvas = document.getElementById('canvas-motion');
+  motionCtx    = motionCanvas.getContext('2d');
+  document.getElementById('hud-team').textContent  = config.teamName;
+  document.getElementById('hud-score').textContent = '0';
+  cancelAnimationFrame(motionAnimFrame);
+  prevFrame = null;
+  loadRound();
+}
+
+// ============================================================
+// ROUND
+// ============================================================
+function loadRound() {
+  const soal = soalList[gameState.currentRound];
+  gameState.phase = 'reading';
+  document.getElementById('soal-phase').textContent   = `SOAL ${gameState.currentRound+1} / ${soalList.length}`;
+  document.getElementById('soal-display').textContent = soal.text;
+  document.getElementById('result-popup').classList.remove('show');
+  showReadCountdown(3, () => startPlaying());
+}
+
+function showReadCountdown(n, cb) {
+  const overlay = document.getElementById('read-overlay');
+  const countEl = document.getElementById('read-count');
+  overlay.classList.add('show');
+  if (n > 0) {
+    countEl.textContent = n;
+    countEl.style.animation = 'none'; void countEl.offsetWidth;
+    countEl.style.animation = 'countDown 0.35s ease';
+    if (n === 3) playAudio('countdown');
+    setTimeout(() => showReadCountdown(n-1, cb), 900);
+  } else {
+    overlay.classList.remove('show');
+    cb();
+  }
+}
+
+function startPlaying() {
+  gameState.phase           = 'playing';
+  gameState.timerRemaining  = config.timerSeconds;
+  prevFrame                 = null;
+  bgFrame                   = null;   // reset background reference tiap soal baru
+  motionBuffer              = { benar:[], salah:[] };
+  zoneBenarMotion           = 0;
+  zoneSalahMotion           = 0;
+  updateTimerUI(config.timerSeconds, config.timerSeconds);
+  startMotionGame();
+  gameState.timerInterval = setInterval(() => {
+    gameState.timerRemaining--;
+    updateTimerUI(gameState.timerRemaining, config.timerSeconds);
+    if (gameState.timerRemaining <= 0) { clearInterval(gameState.timerInterval); lockRound(); }
+  }, 1000);
+}
+
+function updateTimerUI(remaining, total) {
+  document.getElementById('timer-text').textContent = remaining;
+  const circ = document.getElementById('timer-circle');
+  const dash  = 100;
+  circ.style.strokeDashoffset = dash * (1 - remaining/total);
+  circ.style.stroke = remaining<=3 ? 'var(--primary)' : remaining<=5 ? 'var(--accent)' : 'var(--secondary)';
+}
+
+// ============================================================
+// DETEKSI KEHADIRAN (Presence Detection)
+// Cocok untuk kamera di tengah kelas menghadap barisan siswa.
+//
+// Cara kerja:
+//  1. Background reference diambil saat fase "bersiap" (sebelum
+//     siswa bergerak), lalu di-update pelan-pelan (adaptive BG).
+//  2. Setiap frame: hitung selisih piksel terhadap background →
+//     foreground mask = piksel yang "berbeda dari background".
+//  3. Dead zone 15% tengah diabaikan agar tidak ambigu.
+//  4. Zona BENAR = kiri visual (karena video di-mirror),
+//     Zona SALAH = kanan visual.
+//  5. Skor kehadiran di-smooth dengan buffer rolling 10 frame.
+// ============================================================
+
+let bgFrame       = null;   // background reference
+let frameCount    = 0;      // untuk subsampling
+const DEAD_ZONE   = 0.15;   // 15% tengah diabaikan
+const BG_ALPHA    = 0.05;   // kecepatan update adaptive BG (0=freeze, 1=instant)
+const PRESENCE_THRESH = 30; // ambang beda piksel vs background (0-255)
+const BUFFER_SIZE = 10;
+
+function startMotionGame() {
+  if (motionAnimFrame) cancelAnimationFrame(motionAnimFrame);
+  bgFrame    = null;
+  frameCount = 0;
+  detectGameMotion();
+}
+
+// Subsampling: proses setiap N piksel untuk hemat CPU
+const STEP = 4; // proses 1 dari setiap 4 piksel per dimensi
+
+function detectGameMotion() {
+  if (gameState.phase !== 'playing') return;
+  const vid = document.getElementById('video-game');
+  if (!vid.videoWidth) { motionAnimFrame = requestAnimationFrame(detectGameMotion); return; }
+
+  // Resize canvas ke ukuran lebih kecil agar lebih cepat
+  const W = 320, H = Math.round(320 * vid.videoHeight / vid.videoWidth);
+  if (motionCanvas.width !== W)  motionCanvas.width  = W;
+  if (motionCanvas.height !== H) motionCanvas.height = H;
+  motionCtx.drawImage(vid, 0, 0, W, H);
+
+  const curr = motionCtx.getImageData(0, 0, W, H);
+  frameCount++;
+
+  // Ambil background pada frame-frame awal (30 frame pertama = ~1 detik)
+  if (!bgFrame) {
+    bgFrame = new Float32Array(curr.data.length);
+    for (let i = 0; i < curr.data.length; i++) bgFrame[i] = curr.data[i];
+  }
+
+  // Hitung dead zone batas (dalam koordinat data, video sudah di-mirror)
+  const deadLeft  = Math.floor(W * (0.5 - DEAD_ZONE / 2));
+  const deadRight = Math.floor(W * (0.5 + DEAD_ZONE / 2));
+
+  let presB = 0, totB = 0;  // zona BENAR (kiri visual = x >= halfW di data)
+  let presS = 0, totS = 0;  // zona SALAH (kanan visual = x < halfW di data)
+
+  for (let y = 0; y < H; y += STEP) {
+    for (let x = 0; x < W; x += STEP) {
+      // Skip dead zone tengah
+      if (x >= deadLeft && x <= deadRight) continue;
+
+      const idx = (y * W + x) * 4;
+      const dr  = Math.abs(curr.data[idx]   - bgFrame[idx]);
+      const dg  = Math.abs(curr.data[idx+1] - bgFrame[idx+1]);
+      const db  = Math.abs(curr.data[idx+2] - bgFrame[idx+2]);
+      const diff = (dr + dg + db) / 3;
+      const fg   = diff > PRESENCE_THRESH ? 1 : 0;
+
+      // Video di-flip → kiri visual = kanan data (x >= W/2)
+      if (x >= W / 2) { totB++; presB += fg; }
+      else             { totS++; presS += fg; }
+    }
+  }
+
+  const pB = totB > 0 ? Math.min(100, (presB / totB) * 400) : 0;
+  const pS = totS > 0 ? Math.min(100, (presS / totS) * 400) : 0;
+
+  motionBuffer.benar.push(pB); motionBuffer.salah.push(pS);
+  if (motionBuffer.benar.length > BUFFER_SIZE) motionBuffer.benar.shift();
+  if (motionBuffer.salah.length > BUFFER_SIZE) motionBuffer.salah.shift();
+
+  zoneBenarMotion = motionBuffer.benar.reduce((a,b)=>a+b,0) / motionBuffer.benar.length;
+  zoneSalahMotion = motionBuffer.salah.reduce((a,b)=>a+b,0) / motionBuffer.salah.length;
+
+  // Update live bar UI
+  const bB = document.getElementById('bar-benar');
+  const bS = document.getElementById('bar-salah');
+  if (bB) bB.style.width = Math.min(100, zoneBenarMotion * 1.5) + '%';
+  if (bS) bS.style.width = Math.min(100, zoneSalahMotion * 1.5) + '%';
+
+  // Adaptive background update (lambat, agar orang yang berdiri diam tetap terdeteksi)
+  for (let i = 0; i < curr.data.length; i++) {
+    bgFrame[i] = bgFrame[i] * (1 - BG_ALPHA) + curr.data[i] * BG_ALPHA;
+  }
+
+  motionAnimFrame = requestAnimationFrame(detectGameMotion);
+}
+
+// ============================================================
+// LOCK ROUND → tampilkan popup
+// ============================================================
+function lockRound() {
+  gameState.phase = 'locked';
+  cancelAnimationFrame(motionAnimFrame);
+
+  const soal        = soalList[gameState.currentRound];
+  const totalMotion = zoneBenarMotion + zoneSalahMotion;
+  let pctB = 50, pctS = 50;
+  if (totalMotion > 1) { pctB = Math.round((zoneBenarMotion/totalMotion)*100); pctS = 100-pctB; }
+
+  const dominant  = pctB >= 60 ? 'BENAR' : pctS >= 60 ? 'SALAH' : null;
+  const isKompak  = dominant !== null;
+  const isCorrect = dominant === soal.jawaban;
+
+  const card = document.getElementById('result-popup-card');
+  card.className = 'result-popup-card ' + (!isKompak ? 'tidak-kompak' : isCorrect ? 'kompak-benar' : 'kompak-salah');
+
+  const icon   = document.getElementById('popup-icon');
+  const head   = document.getElementById('popup-headline');
+  const sub    = document.getElementById('popup-sub');
+  const badge  = document.getElementById('popup-score-badge');
+  const btn    = document.getElementById('btn-popup-next');
+  const isLast = gameState.currentRound >= soalList.length - 1;
+
+  if (!isKompak) {
+    icon.textContent = '😬'; head.textContent = 'TIDAK KOMPAK!';
+    head.className = 'popup-headline yellow';
+    sub.textContent = `Tim terpencar — tidak ada zona yang dominan. Jawaban yang benar: ${soal.jawaban}`;
+    badge.textContent = '+0 POIN'; badge.className = 'popup-score-badge zero';
+    btn.className = 'btn-popup-next yellow';
+    playAudio('tidakKompak');
+    gameState.roundResults.push({ kompak:false, correct:false });
+  } else if (isCorrect) {
+    icon.textContent = '🎯'; head.textContent = 'KOMPAK + BENAR!';
+    head.className = 'popup-headline green';
+    sub.textContent = `Semua ke zona BENAR — jawaban tepat! +10 poin!`;
+    badge.textContent = '+10 POIN'; badge.className = 'popup-score-badge plus';
+    btn.className = 'btn-popup-next green';
+    gameState.score += 10;
+    document.getElementById('hud-score').textContent = gameState.score;
+    playAudio('benar');
+    gameState.roundResults.push({ kompak:true, correct:true });
+  } else {
+    icon.textContent = '😅'; head.textContent = 'KOMPAK TAPI SALAH!';
+    head.className = 'popup-headline red';
+    sub.textContent = `Semua ke zona ${dominant} — tapi jawaban yang benar adalah ${soal.jawaban}!`;
+    badge.textContent = '+0 POIN'; badge.className = 'popup-score-badge zero';
+    btn.className = 'btn-popup-next red';
+    playAudio('salah');
+    gameState.roundResults.push({ kompak:true, correct:false });
+  }
+
+  document.getElementById('popup-total-score').textContent = gameState.score;
+  btn.textContent = isLast ? '🏆 Lihat Hasil!' : 'Soal Berikutnya →';
+
+  setTimeout(() => {
+    document.getElementById('popup-bar-benar').style.height = pctB+'%';
+    document.getElementById('popup-bar-salah').style.height = pctS+'%';
+    document.getElementById('popup-pct-benar').textContent  = pctB+'%';
+    document.getElementById('popup-pct-salah').textContent  = pctS+'%';
+  }, 250);
+
+  document.getElementById('result-popup').classList.add('show');
+}
+
+function nextRound() {
+  document.getElementById('result-popup').classList.remove('show');
+  gameState.currentRound++;
+  motionBuffer = { benar:[], salah:[] };
+  zoneBenarMotion = 0; zoneSalahMotion = 0;
+  bgFrame = null;
+  if (gameState.currentRound >= soalList.length) { showFinalResult(); return; }
+  prevFrame = null;
+  loadRound();
+  startMotionGame();
+}
+
+// ============================================================
+// FINAL RESULT
+// ============================================================
+function showFinalResult() {
+  switchScreen('screen-result');
+  stopCamera();
+  const score = gameState.score, max = soalList.length*10, pct = score/max;
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-max').textContent   = `dari ${max} poin`;
+
+  let emoji, title, subtitle;
+  if (pct===1)     { emoji='🏆'; title='SEMPURNA!';  subtitle='Tim kalian luar biasa kompak dan cerdas!'; launchConfetti(); }
+  else if (pct>=.7){ emoji='🎯'; title='KEREN!';     subtitle='Hampir sempurna! Sedikit lagi pasti bisa 100.'; launchConfetti(); }
+  else if (pct>=.4){ emoji='💪'; title='LUMAYAN!';   subtitle='Ada potensi besar! Tingkatkan kekompakan kalian.'; }
+  else             { emoji='😤'; title='AYO BISA!';  subtitle='Kekompakan butuh latihan. Coba lagi, pasti lebih baik!'; }
+
+  document.getElementById('final-emoji').textContent    = emoji;
+  document.getElementById('final-title').textContent    = title;
+  document.getElementById('final-subtitle').textContent = subtitle;
+
+  document.getElementById('round-badges').innerHTML = gameState.roundResults.map((r,i)=>`
+    <div class="round-badge">
+      <span class="rb-num">Soal ${i+1}</span>
+      <span class="rb-icon">${r.correct?'✅':r.kompak?'😅':'😬'}</span>
+    </div>
+  `).join('');
+}
+
+function showSetup()          { stopCamera(); soalList = shuffle(SOAL_MASTER); switchScreen('screen-setup'); renderSoalList(); }
+function restartSameConfig()  {
+  soalList = shuffle(SOAL_MASTER);
+  gameState = { currentRound:0, score:0, roundResults:[], timerInterval:null, timerRemaining:10, phase:'idle' };
+  startCalibrate();
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const colors = ['#FF4136','#0074D9','#FFDC00','#2ECC40','#FF69B4','#7FDBFF'];
+  const particles = Array.from({length:140},()=>({
+    x:Math.random()*canvas.width, y:-20,
+    w:Math.random()*10+4, h:Math.random()*6+3,
+    color:colors[Math.floor(Math.random()*colors.length)],
+    vy:Math.random()*3+2, vx:(Math.random()-.5)*2,
+    rot:Math.random()*360, rs:(Math.random()-.5)*5,
+  }));
+  let alive=true;
+  function draw(){
+    if(!alive) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.y+=p.vy; p.x+=p.vx; p.rot+=p.rs;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+    });
+    if(particles.every(p=>p.y>canvas.height)){alive=false;ctx.clearRect(0,0,canvas.width,canvas.height);return;}
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showSnack(msg) {
+  const el = document.getElementById('snackbar');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// INIT
+renderSoalList();
+</script>
+</body>
+</html>
